@@ -1,54 +1,13 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-
+# Use a package of configuration called an orb.
 orbs:
-  main: varnish/orb@0.0.5
-
-
-parameters:
-  src-commit:
-    type: string
-    default: "HEAD"
-  pkg-commit:
-    type: string
-    default: "master"
-  pkg-revision:
-    type: string
-    default: ""
-
+  # Declare a dependency on the welcome-orb
+  welcome: circleci/welcome-orb@0.4.1
+# Orchestrate or schedule a set of jobs
 workflows:
-  build:
+  # Name the workflow "welcome"
+  welcome:
+    # Run the welcome/run job in its own container
     jobs:
-      - main/dist:
-          docker-img: varnish/dist-vcp-centos-7
-          src-commit: << pipeline.parameters.src-commit >>
-          tarball-cmd: |
-            yum install -y libev-devel byacc flex
-            git checkout << pipeline.parameters.src-commit >>
-            ./bootstrap
-            make dist -j 16
-      - main/tar-pkg-tools:
-          fprint: "16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48"
-          repo: pkg-hitch
-          dir: .
-          pkg-commit: << pipeline.parameters.pkg-commit >>
-      - main/package:
-          name: package-<< matrix.platform >>
-          src-name: hitch
-          pkg-revision: << pipeline.parameters.pkg-revision >>
-          requires:
-            - main/dist
-            - main/tar-pkg-tools
-          matrix:
-            parameters:
-              platform:
-                - ubuntu-xenial
-                - ubuntu-bionic
-                - ubuntu-focal
-                - debian-stretch
-                - debian-buster
-                - centos-7
-                - centos-8
-                - amazonlinux-2
-      - main/collect-packages:
-          requires:
-            - main/package
+      - welcome/run
